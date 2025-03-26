@@ -16,6 +16,7 @@ def hello(request):
 def result(request):
     entered_text = request.GET['fulltext']
     word_list = entered_text.split()
+    word_list_count = len(word_list)
 
     word_dictionary = {}
 
@@ -36,5 +37,5 @@ def result(request):
     space_count = entered_text.count(' ')
     nospace_word_count = all_word_count - space_count
 
-    return render(request, 'result.html', {'alltext' : entered_text, 'word_max_key': word_max_key, 'word_max_value': word_max_value, 'all_word_count': all_word_count, 'nospace_word_count': nospace_word_count, 'dictionary' : word_dictionary.items()})
+    return render(request, 'result.html', {'alltext' : entered_text, 'word_list_count' : word_list_count, 'word_max_key': word_max_key, 'word_max_value': word_max_value, 'all_word_count': all_word_count, 'nospace_word_count': nospace_word_count, 'dictionary' : word_dictionary.items()})
 
