@@ -3,8 +3,11 @@ from django.contrib.auth.decorators import login_required
 from .models import *
 
 def main(request):
-    posts = Post.objects.all().order_by('-created_at')
-    return render(request, 'posts/main.html', {'posts': posts})
+    categories = Category.objects.all()
+    category_posts = [(category, category.posts.all().order_by('-id')[:4]) for category in categories]
+    return render(request, 'posts/main.html', {'categories':categories, 'category_posts':category_posts})
+    # posts = Post.objects.all().order_by('-created_at')
+    # return render(request, 'posts/main.html', {'posts': posts})
 
 def detail(request, id):
     post = get_object_or_404(Post, id=id)
@@ -12,7 +15,10 @@ def detail(request, id):
     return render(request, 'posts/detail.html', {'post': post, "comments":comments})
 
 @login_required
-def create(request, slug):
+def category(request, slug):
+    category = get_object_or_404(Category, slug=slug)
+    posts = category.posts.all().order_by('-id')
+
     if request.method == 'POST':
         title = request.POST.get('title')
         content = request.POST.get('content')
@@ -28,7 +34,7 @@ def create(request, slug):
         post.category.add(category)
 
         return redirect('posts:category', slug)
-    return render(request, 'posts/main.html', {'category': category})
+    return render(request, 'posts/main.html', {'category': category, 'posts': posts})
 
 @login_required
 def update_post(request, id):
@@ -46,8 +52,12 @@ def update_post(request, id):
 @login_required
 def delete_post(request, id):
     post = get_object_or_404(Post, id=id)
-    post.delete()
-    return redirect('posts:main')
+    
+    if post.author == request.user.username:
+        post.delete()
+        return redirect('posts:main')
+    
+    return redirect('posts:detail', id=id)
 
 @login_required
 def create_comment(request, post_id):
@@ -57,7 +67,7 @@ def create_comment(request, post_id):
     if request.method == "POST":
         Comment.objects.create(
             content = request.POST.get('content'),
-            is_anonymous = anonymity,
+            anonymity = anonymity,
             author = request.user,
             post = post
         )
@@ -69,26 +79,6 @@ def delete_comment(request, comment_id):
     comment.delete()
     return redirect('posts:detail', id=comment.post.id)
 
-def category(request, slug):
-    category = get_object_or_404(Category, slug=slug)
-    posts = category.posts.all().order_by('-id')
-
-    if request.method == "POST":
-        title = request.POST.get('title')
-        content = request.POST.get('content')
-        is_anonymous = request.POST.get('is_anonymous') == 'on'
-
-        post = Post.objects.create(
-            title = title,
-            content = content,
-            is_anonymous = is_anonymous,
-            author=request.user
-        )
-
-        post.category.add(category)
-
-        return redirect('posts:category', slug)
-    return render(request, 'posts/category.html', {'posts':posts, 'category':category})
 
 def like(request, post_id): 
     if request.method =="POST":
