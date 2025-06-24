@@ -6,10 +6,10 @@
     <title>Document</title>
 </head>
 <body>
-    {% for category in categories %}
-        <a href="{% url 'posts:category' category.slug %}"> {{ category.name }}</a>
-    {% endfor %}
-        <br><br>
+    <a href="{% url 'posts:category' 'secret' %}">비밀게시판</a>
+    <a href="{% url 'posts:category' 'freshman' %}">새내기게시판</a>
+    <a href="{% url 'posts:category' 'free' %}">자유게시판</a>
+    <br><br>
 
     {% if user.is_authenticated %}
         nickname : {{ user.nickname }}<br><br>
@@ -20,13 +20,20 @@
         <a href="{% url 'accounts:signup' %}">회원가입</a>
     {% endif %}
 
-    {% for category, posts in category_posts %}
-        <h3><a href="{% url 'posts:category' category.slug %}">{{ category.name }}</a></h3>
-        {% for post in posts %}
-            <a href="{% url 'posts:detail' post.id %}">{{ post.title }}</a><br><br>
-        {% empty %}
-            글이 없습니다.
-        {% endfor %}
+    {% for post in posts %}
+        <h3>
+            {% if post.category.exists %}
+                <a href="{% url 'posts:category' post.category.first.slug %}">
+                    {{ post.category.first.name }}
+                </a>
+            {% else %}
+                <p>카테고리가 없습니다.</p>
+            {% endif %}
+        </h3>
+        
+        <a href="{% url 'posts:detail' post.id %}">{{ post.title }}</a><br><br>
+    {% empty %}
+        <p>글이 없습니다.</p>
     {% endfor %}
 </body>
 </html>
